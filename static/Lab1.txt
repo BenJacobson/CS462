@@ -1,0 +1,8 @@
+Ben Jacobson - CS462
+
+AMI-ID: ami-16dd6276
+
+User Data Script:
+curl https://raw.githubusercontent.com/BenJacobson/CS462/master/serverInit.sh > serverInit.sh
+chmod 744 serverInit.sh
+./serverInit.sh
