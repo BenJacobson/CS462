@@ -1,10 +1,10 @@
-from flask import Flask, redirect, request, make_response, send_from_directory
+from flask import Flask, redirect, request, make_response, send_from_directory, render_template
 import types
 app = Flask(__name__)
 
 @app.route('/')
-def lab1():
-	return send_from_directory('static', 'Lab1.txt');
+def home():
+	return render_template('index.html') # send_from_directory('static', 'Lab1.txt');
 	
 def create_append_function():
 	def append_function(self, text):
@@ -41,7 +41,18 @@ def my_redirect():
 
 @app.route('/accept')
 def acccept():
-	return 'accept'
+	response = make_response()
+	response.headers[''] = 'application/json'
+	if 'Accept' in request.headers:
+		accept_header = request.headers['Accept']
+		if accept_header == 'application/vnd.byu.cs462.v1+json':
+			response.data = '{"version": "v1" }'
+			return response
+		elif accept_header == 'application/vnd.byu.cs462.v2+json':
+			response.data = '{"version": "v2" }'
+			return response
+	response.data = '{"error": {"message": "Accept header not recognized"}}'
+	return response
 
 @app.route('/<filename>')
 def static_files(filename):

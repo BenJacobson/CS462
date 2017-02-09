@@ -1,0 +1,5 @@
+curl -H "Accept: application/vnd.byu.cs462.v0+json" "http://ec2-52-25-168-24.us-west-2.compute.amazonaws.com/accept"
+curl -H "Accept: application/vnd.byu.cs462.v1+json" "http://ec2-52-25-168-24.us-west-2.compute.amazonaws.com/accept"
+curl -H "Accept: application/vnd.byu.cs462.v2+json" "http://ec2-52-25-168-24.us-west-2.compute.amazonaws.com/accept"
+curl -H "Accept: application/vnd.byu.cs462.v3+json" "http://ec2-52-25-168-24.us-west-2.compute.amazonaws.com/accept"
+curl "http://ec2-52-25-168-24.us-west-2.compute.amazonaws.com/accept"
