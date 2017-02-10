@@ -1,15 +1,41 @@
 from flask import Flask, redirect, request, make_response, send_from_directory, render_template
+from foursquare import FourSquare
 import types
+import ssl
+
 app = Flask(__name__)
+
+# Authorization functions
+	
+providers = {
+    'foursquare': FourSquare
+}
+	
+	
+# App routes
 
 @app.route('/')
 def home():
-	return render_template('index.html') # send_from_directory('static', 'Lab1.txt');
+	return render_template('index.html')
+	
+@app.route('/authorize/<provider>')
+def oauth_authorize(provider):
+	if provider in providers:
+		if 'code' in request.args:
+			access_token = providers[provider].authenticate(request.args.get('code'))
+			print('access_token', access_token)
+			return redirect('/accept')
+		else:
+			return providers[provider].begin_oauth()
+	else:
+		return redirect('/')
+	
 	
 def create_append_function():
 	def append_function(self, text):
 		self.data += text + '\n\r'
 	return append_function
+	
 	
 @app.route('/dump', methods = ['GET', 'POST'])
 def dump():
@@ -26,6 +52,7 @@ def dump():
 	response.append('  ' + request.get_data())
 	return response
 	
+	
 @app.route('/redirect')
 def my_redirect():
 	if 'google' in request.args:
@@ -39,6 +66,7 @@ def my_redirect():
 	else:
 		return redirect('/')
 
+		
 @app.route('/accept')
 def acccept():
 	response = make_response()
@@ -54,9 +82,13 @@ def acccept():
 	response.data = '{"error": {"message": "Accept header not recognized"}}'
 	return response
 
+	
 @app.route('/<filename>')
 def static_files(filename):
 	return send_from_directory('static', filename);
 
+
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=80)
+	context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+	context.load_cert_chain('cert.pem', 'key.pem')
+	app.run(host='0.0.0.0', port=443, ssl_context=context)
