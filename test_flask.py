@@ -4,8 +4,6 @@ import types
 import ssl
 
 app = Flask(__name__)
-
-# Authorization functions
 	
 providers = {
     'foursquare': FourSquare
@@ -23,8 +21,10 @@ def oauth_authorize(provider):
 	if provider in providers:
 		if 'code' in request.args:
 			access_token = providers[provider].authenticate(request.args.get('code'))
-			print('access_token', access_token)
-			return redirect('/accept')
+			user = providers[provider].get_user_data(access_token)
+			response = make_response()
+			response.data += repr(user)
+			return response
 		else:
 			return providers[provider].begin_oauth()
 	else:

@@ -11,9 +11,33 @@
 			background: radial-gradient(ellipse at top left, rgba(105,155,200,1) 0%,rgba(181,197,216,1) 57%);
 			filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#699bc8', endColorstr='#b5c5d8',GradientType=1 );
 		}
+		
+		#foursquare-form {
+			display: inline-flex;
+			margin-top: 10em;
+		}
+		
+		#foursquare-img {
+			width: 5em;
+			height: 5em;
+		}
+		
+		#foursquare-button {
+			padding: 1em;
+		}
+		
 	</style>
 </head>
 <body class="background" >
-	<h1>Hello world!</h1>
+	<center>
+	
+		<h1>Ben Jacobson's Website</h1>
+	
+		<form action="/authorize/foursquare" method="GET" id="foursquare-form">
+			<img src="https://ss1.4sqi.net/img/metaIcons/touch-icon-72-cf2d6cd44afc49e9889ad54e33e69f31.png" id="foursquare-img"/>
+			<input type="submit" value="Sign-In with FourSquare" id="foursquare-button" />
+		</form>
+		
+	</center>
 </body>
 </html>
