@@ -1,16 +1,35 @@
 from flask import Flask, redirect, request, make_response, send_from_directory, render_template
 from foursquare import FourSquare
+from flask_sqlalchemy import SQLAlchemy
 import types
 import ssl
 
+# Initialize application
+
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///CS462.db'
+db = SQLAlchemy(app)
 	
 providers = {
     'foursquare': FourSquare
 }
+
+
+# initialize database
+
+class User(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	foursquareid = db.Column(db.Integer, unique=True)
+	sessionid = db.Column(db.Integer, unique=True)
+	firstname = db.Column(db.String(20), unique=True)
+	lastname = db.Column(db.String(20), unique=True)
+	email = db.Column(db.String(40), unique=True)
 	
-	
-# App routes
+	def __repr__(self):
+		return '<User {0} {1}>'.format(self.firstname, self.lastname)
+
+
+# Define routes
 
 @app.route('/')
 def home():
