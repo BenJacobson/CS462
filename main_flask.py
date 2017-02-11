@@ -1,7 +1,8 @@
 from flask import Flask, redirect, request, make_response, send_from_directory, render_template
 from foursquare import FourSquare
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound 
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+import binascii
 import types
 import ssl
 import os
@@ -29,7 +30,8 @@ class User(db.Model):
 	email = db.Column(db.String(40), unique=True)
 	
 	def is_logged_in(self):
-		return True
+		print('sessionid', self.sessionid)
+		return self.sessionid is not None
 	
 	def __repr__(self):
 		return '<User {0} {1}>'.format(self.firstname, self.lastname)
@@ -42,6 +44,7 @@ def validate_user(f):
 		global current_user
 		sessionid = request.cookies.get('session')
 		current_user = User.query.filter_by(sessionid=sessionid).first()
+		current_user = current_user if current_user is not None else User()
 		kwargs['current_user'] = current_user
 		return f(*args, **kwargs)
 	wrapper.__name__ = f.__name__
@@ -54,15 +57,25 @@ def validate_user(f):
 @validate_user
 def home(current_user):
 	all_users = User.query.all()
-	response = make_response(render_template('index.html', users=all_users))
-	response.set_cookie('session', 'testing session')
-	return response
+	return render_template('index.html', current_user=current_user, users=all_users)
 	
 
 @app.route('/login')
 @validate_user
 def login(current_user):
-	return render_template('login.html')
+	if current_user.is_logged_in():
+		return redirect('/')
+	else:
+		return render_template('login.html')
+		
+		
+@app.route('/logout')
+@validate_user
+def logout(current_user):
+	if current_user.sessionid is not None:
+		current_user.sessionid = None
+		db.session.commit()
+	return redirect('/')
 
 
 @app.route('/authorize/<provider>')
@@ -78,12 +91,19 @@ def oauth_authorize(provider, current_user):
 def oauth_callback(provider):
 	if provider in providers:
 		access_token = providers[provider].authenticate()
-		user = providers[provider].get_user_data(access_token)
-		response = make_response()
-		response.data += repr(user)
-		return response
-	else:
-		return redirect('/')
+		user_data = providers[provider].get_user_data(access_token)
+		user = User.query.filter_by(foursquareid=user_data['id']).first()
+		if user is not None:
+			new_sessionid = binascii.hexlify(os.urandom(16))
+			print('new_sessionid', new_sessionid)
+			user.sessionid = new_sessionid
+			db.session.commit()
+			response = make_response(redirect('/'))
+			response.set_cookie('session', new_sessionid)
+			return response
+		else:
+			return 'Error: four square id not recognized. Please create an account first'
+	return redirect('/')
 		
 
 @app.route('/user/<id>')
