@@ -1,4 +1,4 @@
-from flask import redirect
+from flask import redirect, request
 import requests
 import json
 
@@ -7,7 +7,7 @@ class FourSquare:
 
 	_CLIENT_ID        = 'GPWFUYGOJBMASF0CAMEYEPQTQCHWOCSRFQEJYVGTIYG3L01D'
 	_CLIENT_SECRET    = 'VD5YTEAN2SKZAEI1GLMBPKOSE2YXR3BAKP1RP41M4Q1PONZH'
-	_REDIRECT_URL     = 'https://ec2-52-25-168-24.us-west-2.compute.amazonaws.com/authorize/foursquare'
+	_REDIRECT_URL     = 'https://ec2-52-25-168-24.us-west-2.compute.amazonaws.com/callback/foursquare'
 	_AUTHENTICATE_URL = 'https://foursquare.com/oauth2/authenticate'
 	_ACCESS_TOKEN_URL = 'https://foursquare.com/oauth2/access_token'
 	_USER_DATA_URL    = 'https://api.foursquare.com/v2/users/self'
@@ -23,7 +23,8 @@ class FourSquare:
 			)
 		
 	@classmethod
-	def authenticate(cls, code):
+	def authenticate(cls):
+		code = request.args.get('code')
 		json_response = requests.get(
 			cls._ACCESS_TOKEN_URL +
 			'?client_id={0}'.format(cls._CLIENT_ID) +
@@ -41,5 +42,5 @@ class FourSquare:
 		json_response = requests.get(
 			url
 		).content
-		user = json.loads(json_response)['response']['user']
-		return user
+		foursquare_user = json.loads(json_response)['response']['user']
+		return foursquare_user

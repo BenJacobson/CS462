@@ -14,15 +14,15 @@ providers = {
     'foursquare': FourSquare
 }
 
-
-# initialize database
+# Define database models
 
 class User(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	foursquareid = db.Column(db.Integer, unique=True)
+	foursquaretoken = db.Column(db.String(50), unique=False)
 	sessionid = db.Column(db.Integer, unique=True)
-	firstname = db.Column(db.String(20), unique=True)
-	lastname = db.Column(db.String(20), unique=True)
+	firstname = db.Column(db.String(20), unique=False)
+	lastname = db.Column(db.String(20), unique=False)
 	email = db.Column(db.String(40), unique=True)
 	
 	def __repr__(self):
@@ -33,22 +33,34 @@ class User(db.Model):
 
 @app.route('/')
 def home():
-	return render_template('index.html')
+	users = User.query.all()
+	return render_template('index.html', users=users)
 	
+
+@app.route('/login')
+def login():
+	return render_template('login.html')
+
+
 @app.route('/authorize/<provider>')
 def oauth_authorize(provider):
 	if provider in providers:
-		if 'code' in request.args:
-			access_token = providers[provider].authenticate(request.args.get('code'))
-			user = providers[provider].get_user_data(access_token)
-			response = make_response()
-			response.data += repr(user)
-			return response
-		else:
-			return providers[provider].begin_oauth()
+		return providers[provider].begin_oauth()
 	else:
 		return redirect('/')
-	
+
+
+@app.route('/callback/<provider>')	
+def oauth_callback(provider):
+	if provider in providers:
+		access_token = providers[provider].authenticate()
+		user = providers[provider].get_user_data(access_token)
+		response = make_response()
+		response.data += repr(user)
+		return response
+	else:
+		return redirect('/')
+		
 	
 def create_append_function():
 	def append_function(self, text):
@@ -106,6 +118,8 @@ def acccept():
 def static_files(filename):
 	return send_from_directory('static', filename);
 
+
+# Run application
 
 if __name__ == '__main__':
 	context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)

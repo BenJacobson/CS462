@@ -1,4 +1,4 @@
-from main import db, User
+from main_flask import db, User
 
 db.create_all()
 
