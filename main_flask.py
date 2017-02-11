@@ -1,13 +1,16 @@
 from flask import Flask, redirect, request, make_response, send_from_directory, render_template
 from foursquare import FourSquare
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound 
 import types
 import ssl
+import os
 
 # Initialize application
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///CS462.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 	
 providers = {
@@ -25,25 +28,46 @@ class User(db.Model):
 	lastname = db.Column(db.String(20), unique=False)
 	email = db.Column(db.String(40), unique=True)
 	
+	def is_logged_in(self):
+		return True
+	
 	def __repr__(self):
 		return '<User {0} {1}>'.format(self.firstname, self.lastname)
+		
+
+# Helpful decorators
+
+def validate_user(f):
+	def wrapper(*args, **kwargs):
+		global current_user
+		sessionid = request.cookies.get('session')
+		current_user = User.query.filter_by(sessionid=sessionid).first()
+		kwargs['current_user'] = current_user
+		return f(*args, **kwargs)
+	wrapper.__name__ = f.__name__
+	return wrapper
 
 
 # Define routes
 
 @app.route('/')
-def home():
-	users = User.query.all()
-	return render_template('index.html', users=users)
+@validate_user
+def home(current_user):
+	all_users = User.query.all()
+	response = make_response(render_template('index.html', users=all_users))
+	response.set_cookie('session', 'testing session')
+	return response
 	
 
 @app.route('/login')
-def login():
+@validate_user
+def login(current_user):
 	return render_template('login.html')
 
 
 @app.route('/authorize/<provider>')
-def oauth_authorize(provider):
+@validate_user
+def oauth_authorize(provider, current_user):
 	if provider in providers:
 		return providers[provider].begin_oauth()
 	else:
@@ -61,6 +85,18 @@ def oauth_callback(provider):
 	else:
 		return redirect('/')
 		
+
+@app.route('/user/<id>')
+@validate_user
+def user_page(id, current_user):
+	try:
+		user = User.query.filter_by(id=id).one()
+		return render_template('user.html', user=user)
+	except NoResultFound:
+		return 'NoResultFound'
+	except MultipleResultsFound:
+		return 'MultipleResultsFound'
+	
 	
 def create_append_function():
 	def append_function(self, text):

@@ -33,20 +33,16 @@
 	<center>
 	
 		<div class="header">
-			<a href="/login">Login</a>
+			<a href="/">Home</a>
 		</div>
 	
 		<h1>Ben Jacobson's Website</h1>
 		
 		<br/><br/>
-		
-		<h3>Users</h3>
 	
-		{% for user in users %}
 		<div>
-			<a href="/user/{{user.id}}">{{user.firstname}} {{user.lastname}}</a>
+			User page for {{user.firstname}} {{user.lastname}}
 		</div>
-		{% endfor %}
 		
 	</center>
 </body>
