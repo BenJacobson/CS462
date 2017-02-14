@@ -27,6 +27,11 @@
 			padding: 1em;
 		}
 		
+		ul {
+			display: table;
+			margin: 0 auto;
+		}
+		
 	</style>
 </head>
 <body class="background" >
@@ -41,7 +46,27 @@
 		<br/><br/>
 	
 		<div>
-			User page for {{user.firstname}} {{user.lastname}}
+			<h3>User page for {{user.firstname}} {{user.lastname}}</h3>
+			<br/>
+			
+			{% if user.id == current_user.id %}
+				{% if checkins['count'] == 0 %}
+					You do not have any checkins :(
+				{% else %}
+					Here is a list of your checkins:
+					<ul>
+					{% for item in checkins['items'] %}
+						<li>{{item['venue']['name']}}</li>
+					{% endfor %}
+					</ul>
+				{% endif %}
+			{% else %}
+				{% if checkins['count'] == 0 %}
+					This user does not have any checkins :(
+				{% else %}
+					This user most recently checked in to {{checkins['items'][0]['venue']['name']}}
+				{% endif %}
+			{% endif %}
 		</div>
 		
 	</center>

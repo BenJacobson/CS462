@@ -77,7 +77,7 @@ def logout(current_user):
 		db.session.commit()
 	return redirect('/')
 
-
+	
 @app.route('/authorize/<provider>')
 @validate_user
 def oauth_authorize(provider, current_user):
@@ -93,16 +93,21 @@ def oauth_callback(provider):
 		access_token = providers[provider].authenticate()
 		user_data = providers[provider].get_user_data(access_token)
 		user = User.query.filter_by(foursquareid=user_data['id']).first()
-		if user is not None:
-			new_sessionid = binascii.hexlify(os.urandom(16))
-			print('new_sessionid', new_sessionid)
-			user.sessionid = new_sessionid
-			db.session.commit()
-			response = make_response(redirect('/'))
-			response.set_cookie('session', new_sessionid)
-			return response
-		else:
-			return 'Error: four square id not recognized. Please create an account first'
+		if user is None:
+			user = User(
+				foursquareid=user_data['id'],
+				foursquaretoken=access_token,
+				firstname=user_data['firstName'],
+				lastname=user_data['lastName'],
+				email=user_data['contact']['email'],
+			)
+			db.session.add(user)
+		new_sessionid = binascii.hexlify(os.urandom(16))
+		user.sessionid = new_sessionid
+		db.session.commit()
+		response = make_response(redirect('/'))
+		response.set_cookie('session', new_sessionid)
+		return response
 	return redirect('/')
 		
 
@@ -111,7 +116,9 @@ def oauth_callback(provider):
 def user_page(id, current_user):
 	try:
 		user = User.query.filter_by(id=id).one()
-		return render_template('user.html', user=user)
+		user_data = FourSquare.get_user_data(user.foursquaretoken)
+		checkins = user_data['checkins']
+		return render_template('user.html', user=user, current_user=current_user, checkins=checkins)
 	except NoResultFound:
 		return 'NoResultFound'
 	except MultipleResultsFound:

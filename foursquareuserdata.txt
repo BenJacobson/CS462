@@ -1,0 +1,127 @@
+{
+   u'photo':{
+      u'default':True,
+      u'prefix':      u'https://igx.4sqi.net/img/user/',
+      u'suffix':u'/blank_boy.png'
+   },
+   u'pings':False,
+   u'homeCity':u'Utah',
+   u'id':u'401184008',
+   u'createdAt':1486684881,
+   u'friends':{
+      u'count':0,
+      u'groups':[
+         {
+            u'count':0,
+            u'items':[
+
+            ],
+            u'type':u'friends',
+            u'name':u'Mutual friends'
+         },
+         {
+            u'count':0,
+            u'items':[
+
+            ],
+            u'type':u'others',
+            u'name':u'Other friends'
+         }
+      ]
+   },
+   u'contact':{
+      u'verifiedPhone':u'false',
+      u'email':u'bentjacobson@gmail.com'
+   },
+   u'referralId':u'u-401184008',
+   u'tips':{
+      u'count':0
+   },
+   u'type':u'user',
+   u'bio':u'',
+   u'canonicalUrl':   u'https://foursquare.com/user/401184008',
+   u'relationship':u'self',
+   u'lists':{
+      u'count':2,
+      u'groups':[
+         {
+            u'count':0,
+            u'items':[
+
+            ],
+            u'type':u'created'
+         },
+         {
+            u'count':0,
+            u'items':[
+
+            ],
+            u'type':u'followed'
+         },
+         {
+            u'count':2,
+            u'items':[
+               {
+                  u'description':u'',
+                  u'collaborative':False,
+                  u'url':u'/user/401184008/list/todos',
+                  u'editable':True,
+                  u'listItems':{
+                     u'count':0
+                  },
+                  u'id':u'401184008/todos',
+                  u'type':u'todos',
+                  u'public':True,
+                  u'canonicalUrl':                  u'https://foursquare.com/user/401184008/list/todos',
+                  u'name':u'My Saved Places'
+               },
+               {
+                  u'description':u'',
+                  u'collaborative':False,
+                  u'url':u'/user/401184008/list/venuelikes',
+                  u'editable':True,
+                  u'listItems':{
+                     u'count':0
+                  },
+                  u'id':u'401184008/venuelikes',
+                  u'type':u'likes',
+                  u'public':True,
+                  u'canonicalUrl':                  u'https://foursquare.com/user/401184008/list/venuelikes',
+                  u'name':u'My Liked Places'
+               }
+            ],
+            u'type':u'yours'
+         }
+      ]
+   },
+   u'photos':{
+      u'count':0,
+      u'items':[
+
+      ]
+   },
+   u'birthday':737596800,
+   u'checkinPings':u'off',
+   u'checkins':{
+      u'count':0,
+      u'items':[
+
+      ]
+   },
+   u'firstName':u'Ben',
+   u'lastName':u'Jacobson',
+   u'blockedStatus':u'none',
+   u'gender':u'male',
+   u'requests':{
+      u'count':0
+   },
+   u'mayorships':{
+      u'count':0,
+      u'items':[
+
+      ]
+   },
+   u'lenses':[
+
+   ]
+}
