@@ -56,7 +56,7 @@
 					Here is a list of your checkins:
 					<ul>
 					{% for item in checkins['items'] %}
-						<li>{{item['venue']['name']}}</li>
+						<li>{{item['venue']['name']}}. You are{{ ' ' if item['isMayor'] else ' not '}}the mayor. This checkin has {{item['likes']['count']}} like(s).</li>
 					{% endfor %}
 					</ul>
 				{% endif %}

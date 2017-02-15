@@ -116,8 +116,7 @@ def oauth_callback(provider):
 def user_page(id, current_user):
 	try:
 		user = User.query.filter_by(id=id).one()
-		user_data = FourSquare.get_user_data(user.foursquaretoken)
-		checkins = user_data['checkins']
+		checkins = FourSquare.get_checkins(user.foursquaretoken)
 		return render_template('user.html', user=user, current_user=current_user, checkins=checkins)
 	except NoResultFound:
 		return 'NoResultFound'
