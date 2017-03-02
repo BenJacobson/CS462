@@ -1,5 +1,6 @@
 from flask import Flask, redirect, request, make_response, send_from_directory, render_template
 from foursquare import FourSquare
+from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 import binascii
@@ -14,6 +15,7 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///CS462.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+socketio = SocketIO(app)
 	
 providers = {
     'foursquare': FourSquare
@@ -43,8 +45,7 @@ def validate_user(f):
 	def wrapper(*args, **kwargs):
 		global current_user
 		sessionid = request.cookies.get('session')
-		current_user = User.query.filter_by(sessionid=sessionid).first()
-		current_user = current_user if current_user is not None else User()
+		current_user = User.query.filter_by(sessionid=sessionid).first() or User()
 		kwargs['current_user'] = current_user
 		return f(*args, **kwargs)
 	wrapper.__name__ = f.__name__
@@ -128,7 +129,20 @@ def user_page(id, current_user):
 @validate_user
 def chat(current_user):
 	return render_template('chat.html', current_user=current_user)
+
+
+@app.route('/gossip')
+@validate_user
+def gossip(current_user):
+	if not current_user.is_logged_in():
+		pass
+	pass
 	
+
+@socketio.on('connect', namespace='/dd')
+def socket_connect():
+    print('socket connect')
+
 	
 def create_append_function():
 	def append_function(self, text):
@@ -192,4 +206,5 @@ def static_files(filename):
 if __name__ == '__main__':
 	context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 	context.load_cert_chain('cert.pem', 'key.pem')
-	app.run(host='0.0.0.0', port=443, ssl_context=context)
+	# app.run(host='0.0.0.0', port=443, ssl_context=context)
+	socketio.run(app, host='0.0.0.0', port=443, ssl_context=context)
