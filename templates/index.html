@@ -33,7 +33,7 @@
 	<center>
 	
 		<div class="header">
-			{% if current_user.sessionid is not none %}
+			{% if current_user.is_logged_in() %}
 				{{current_user.firstname}} {{current_user.lastname}} - <a href="/logout">Logout</a>
 			{% else %}
 				<a href="/login">Login</a>
@@ -51,6 +51,12 @@
 			<a href="/user/{{user.id}}">{{user.firstname}} {{user.lastname}}</a>
 		</div>
 		{% endfor %}
+
+		<br/>
+
+		<div>
+			<a href="/chat">Chat</a> with online users!
+		</div>
 		
 	</center>
 </body>

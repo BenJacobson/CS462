@@ -1,0 +1,2 @@
+sudo kill $(ps aux | grep flask | grep sudo | awk '{print $2}')
+sudo python main_flask.py

@@ -10,6 +10,7 @@ import os
 # Initialize application
 
 app = Flask(__name__)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///CS462.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -30,7 +31,6 @@ class User(db.Model):
 	email = db.Column(db.String(40), unique=True)
 	
 	def is_logged_in(self):
-		print('sessionid', self.sessionid)
 		return self.sessionid is not None
 	
 	def __repr__(self):
@@ -122,6 +122,12 @@ def user_page(id, current_user):
 		return 'NoResultFound'
 	except MultipleResultsFound:
 		return 'MultipleResultsFound'
+
+
+@app.route('/chat')
+@validate_user
+def chat(current_user):
+	return render_template('chat.html', current_user=current_user)
 	
 	
 def create_append_function():

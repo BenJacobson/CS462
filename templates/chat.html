@@ -1,0 +1,131 @@
+<html>
+<head>
+	<script src="{{url_for('static', filename='chatroom.js')}}"></script>
+	<style media="screen" type="text/css">
+		.background {
+			margin: 0px;
+			background: radial-gradient(ellipse at top left, rgba(105,155,200,1) 0%,rgba(181,197,216,1) 57%);
+		}
+		
+		.header {
+			background: white;
+			padding: .5em;
+			padding-right: 2em;
+			text-align: right;
+		}
+		
+		#foursquare-form {
+			display: inline-flex;
+			margin-top: 10em;
+		}
+		
+		#foursquare-img {
+			width: 5em;
+			height: 5em;
+		}
+		
+		#foursquare-button {
+			padding: 1em;
+		}
+
+		.chatRoom {
+			padding: 1em;
+			max-width: 50em;
+			background: rgba(2, 2, 2, 0.1);
+		}
+
+		.chatbox {
+			height: 20em;
+			overflow-y: scroll;
+			border-style: solid;
+			border-width: 1px;
+		}
+
+		.sendbox {
+			width: 100%;
+			display: inline-flex;
+			margin-top: 10px;
+		}
+
+		#messagesList {
+		  list-style-type: none;
+		  text-align: left;
+		}
+
+		li {
+			margin-top: 2px;
+			margin-bottom: 3px;
+		}
+
+		#chatMessage {
+			width: 100%;
+			background-color: transparent;
+			border-color: black;
+			border-style: solid;
+			border-top-width: 0px;
+			border-left-width: 0px;
+			border-right-width: 0px;
+			border-bottom-width: 1px;
+			margin-left: 4px;
+			margin-right: 4px;
+			outline: none;
+		}
+		
+	</style>
+</head>
+<body class="background" >
+	<center>
+	
+		<div class="header">
+			{% if current_user.is_logged_in() %}
+				{{current_user.firstname}} {{current_user.lastname}} - <a href="/logout">Logout</a>
+			{% else %}
+				<a href="/login">Login</a>
+			{% endif %}
+		</div>
+	
+		<h1>Ben Jacobson's Website</h1>
+		
+		<br/><br/>
+
+		<div class="chatRoom">
+		
+			<h3>Chat Room</h3>
+
+			{% if current_user.is_logged_in() %}
+		
+				<div class="chatbox">
+					<ul id="messagesList">
+						<li>Test</li>
+						<li>Test</li>
+						<li>Test</li>
+						<li>Test</li>
+						<li>Test</li>
+						<li>Test</li>
+						<li>Test</li>
+						<li>Test</li>
+						<li>Test</li>
+						<li>Test</li>
+						<li>Test</li>
+						<li>Test</li>
+						<li>Last</li>
+					</ul>
+				</div>
+
+				<div class="sendbox">
+					Message:
+					<input type="test" id="chatMessage"></input>
+					<input type="submit" value="Send" onclick="sendChatMessage()"/>
+				</div>
+
+			{% else %}
+
+				<h5>Please login to chat</h5>
+
+			{% endif %}
+
+		</div>
+		
+	</center>
+</body>
+</html>
