@@ -1,10 +1,11 @@
 from flask import Flask, redirect, request, make_response, send_from_directory, render_template
-from foursquare import FourSquare
-from flask_socketio import SocketIO
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from flask_sqlalchemy import SQLAlchemy
+from foursquare import FourSquare
 import binascii
+import random
 import types
+import json
 import ssl
 import os
 
@@ -15,7 +16,6 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///CS462.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-socketio = SocketIO(app)
 	
 providers = {
     'foursquare': FourSquare
@@ -42,14 +42,14 @@ class User(db.Model):
 # Helpful decorators
 
 def validate_user(f):
-	def wrapper(*args, **kwargs):
+	def validate_user_wrapper(*args, **kwargs):
 		global current_user
 		sessionid = request.cookies.get('session')
 		current_user = User.query.filter_by(sessionid=sessionid).first() or User()
 		kwargs['current_user'] = current_user
 		return f(*args, **kwargs)
-	wrapper.__name__ = f.__name__
-	return wrapper
+	validate_user_wrapper.__name__ = f.__name__
+	return validate_user_wrapper
 
 
 # Define routes
@@ -131,17 +131,25 @@ def chat(current_user):
 	return render_template('chat.html', current_user=current_user)
 
 
-@app.route('/gossip')
-@validate_user
-def gossip(current_user):
-	if not current_user.is_logged_in():
-		pass
-	pass
-	
+forwarding_store = dict()
 
-@socketio.on('connect', namespace='/dd')
-def socket_connect():
-    print('socket connect')
+@app.route('/gossip/<uuid>', methods=['POST'])
+@validate_user
+def gossip(current_user, uuid):
+	global forwarding_store
+	if uuid not in forwarding_store:
+		forwarding_store[uuid] = []
+	if not current_user.is_logged_in():
+		response = make_response()
+		response.headers['Content-Type'] = 'application/json'
+		response.data = '{"error": {"message": "please login to chat"}}'
+		return response
+	data = request.get_data()
+	other_user = random.sample(forwarding_store.keys(), 1)[0]
+	if other_user != uuid:
+		forwarding_store[other_user].insert(0, data)
+	# return pending items sent to user
+	return forwarding_store[uuid].pop() if len(forwarding_store[uuid]) > 0 else ''
 
 	
 def create_append_function():
@@ -150,7 +158,7 @@ def create_append_function():
 	return append_function
 	
 	
-@app.route('/dump', methods = ['GET', 'POST'])
+@app.route('/dump', methods=['GET', 'POST'])
 def dump():
 	response = make_response()
 	response.append = types.MethodType(create_append_function(), response)
@@ -183,7 +191,7 @@ def my_redirect():
 @app.route('/accept')
 def acccept():
 	response = make_response()
-	response.headers[''] = 'application/json'
+	response.headers['Content-Type'] = 'application/json'
 	if 'Accept' in request.headers:
 		accept_header = request.headers['Accept']
 		if accept_header == 'application/vnd.byu.cs462.v1+json':
@@ -206,5 +214,4 @@ def static_files(filename):
 if __name__ == '__main__':
 	context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
 	context.load_cert_chain('cert.pem', 'key.pem')
-	# app.run(host='0.0.0.0', port=443, ssl_context=context)
-	socketio.run(app, host='0.0.0.0', port=443, ssl_context=context)
+	app.run(host='0.0.0.0', port=443, ssl_context=context)
