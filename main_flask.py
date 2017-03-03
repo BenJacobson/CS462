@@ -145,7 +145,16 @@ def gossip(current_user, uuid):
 		response.data = '{"error": {"message": "please login to chat"}}'
 		return response
 	data = request.get_data()
-	other_user = random.sample(forwarding_store.keys(), 1)[0]
+	try:
+		parsed_data = json.loads(data)
+		if 'Rumor' in parsed_data and 'Endpoint' in parsed_data:
+			other_user = parsed_data['Endpoint']
+		else:
+			raise Exception()
+		if other_user not in forwarding_store:
+			forwarding_store[other_user] = []
+	except:
+		other_user = random.sample(forwarding_store.keys(), 1)[0]
 	if other_user != uuid:
 		forwarding_store[other_user].insert(0, data)
 	# return pending items sent to user

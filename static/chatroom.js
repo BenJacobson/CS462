@@ -41,7 +41,12 @@ function prepareRumor() {
 		else
 			return {};
 	} else { // Want
-		return {Want: messageNeeds};
+		console.log('sending want');
+		wants = [];
+		for (key in messageNeeds) {
+			wants.push(key + ':' + messageNeeds[key]);
+		}
+		return {Want: wants, Endpoint: originID};
 	}
 }
 
@@ -69,7 +74,17 @@ function sendRumor(rumor) {
 	    		}
 	    	}
 	    	if (response.hasOwnProperty('Want')) {
-	    		
+	    		response.Want.forEach(function (messageID) {
+	    			if (messageStore.hasOwnProperty(messageID)) {
+	    				// prepare response rumor and end it
+	    				rumor = {};
+	    				rumor.Rumor = messageStore[messageID];
+	    				rumor.Endpoint = response.Endpoint
+	    				console.log('Sending response to want');
+	    				console.log(rumor);
+	    				sendRumor(rumor);
+	    			}
+	    		});
 	    	}
 	        console.log(response);
 	    }
