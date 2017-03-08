@@ -1,13 +1,12 @@
 <html>
 <head>
-	{% if current_user.is_logged_in() %}
-		<script src="{{url_for('static', filename='chatroom.js')}}"></script>
-	{% endif %}
+
+	<script src="{{url_for('static', filename='chatroom.js')}}"></script>
 
 	<style media="screen" type="text/css">
 		.background {
 			margin: 0px;
-			background: radial-gradient(ellipse at top left, rgba(105,155,200,1) 0%,rgba(181,197,216,1) 57%);
+			background: radial-gradient(ellipse at top left, rgba(105,155,200,1) 0%, rgba(181,197,216,1) 57%);
 		}
 		
 		.header {
@@ -31,7 +30,7 @@
 			padding: 1em;
 		}
 
-		.chatRoom {
+		.chatRoom, .addEndpoint {
 			padding: 1em;
 			max-width: 50em;
 			background: rgba(70, 70, 70, 0.1);
@@ -45,7 +44,7 @@
 			border-width: 1px;
 		}
 
-		.sendbox {
+		.sendbox, .endpointBox {
 			width: 100%;
 			display: inline-flex;
 			margin-top: 10px;
@@ -56,13 +55,27 @@
 		  text-align: left;
 		}
 
-		li {
+		.chatbox li {
 			margin-top: 2px;
 			margin-bottom: 3px;
 		}
 
-		#chatMessage {
+		#chatMessage, #newEndpoint {
 			width: 100%;
+			background-color: transparent;
+			border-color: black;
+			border-style: solid;
+			border-top-width: 0px;
+			border-left-width: 0px;
+			border-right-width: 0px;
+			border-bottom-width: 1px;
+			margin-left: 4px;
+			margin-right: 4px;
+			outline: none;
+		}
+
+		#chatName {
+			width: 5em;
 			background-color: transparent;
 			border-color: black;
 			border-style: solid;
@@ -96,25 +109,33 @@
 		
 			<h3>Chat Room</h3>
 
-			{% if current_user.is_logged_in() %}
-		
-				<div class="chatbox">
-					<ul id="messagesList"></ul>
-				</div>
+			<div class="chatbox">
+				<ul id="messagesList"></ul>
+			</div>
 
-				<div class="sendbox">
-					Message:
-					<input type="text" id="chatMessage"></input>
-					<input type="submit" value="Send" id="sendMessage" onclick="sendChatMessage()"/>
-				</div>
-
-			{% else %}
-
-				<h5>Please login to chat</h5>
-
-			{% endif %}
+			<div class="sendbox">
+				Name:
+				<input type="text" id="chatName" value="{% if current_user.is_logged_in() %}{{current_user.firstname}}{% else%}Anon{% endif %}"/>
+				Message:
+				<input type="text" id="chatMessage"/>
+				<input type="submit" value="Send" id="sendMessage" onclick="sendChatMessage()"/>
+			</div>
 
 		</div>
+
+		<br/><br/>
+		<br/><br/>
+
+		<div class="addEndpoint">
+			<h4>Add new chat member</h4>
+			<div class="endpointBox">
+				Endpoint:
+				<input type="text" id="newEndpoint"/>
+				<input type="submit" value="Send" id="sendEndpoint" onclick="addNewEndpoint()"/>
+			</div>
+		</div>
+
+		<p id="endpoint">Current Endpoint: </p>
 		
 	</center>
 </body>
