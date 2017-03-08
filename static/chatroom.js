@@ -93,6 +93,9 @@ function propagateGossipMessage() {
 }
 
 function receiveGossipMessage(gossipMessage) {
+	if (gossipMessage.hasOwnProperty('Endpoint')) {
+		otherEndpoints.push(gossipMessage.Endpoint);
+	}
 	if (gossipMessage.hasOwnProperty('Rumor')) {
 		// update message needs here
 		var originSeq = gossipMessage.Rumor.ID.split(':');
@@ -103,7 +106,7 @@ function receiveGossipMessage(gossipMessage) {
 		origin = originSeq[0];
 		seq = parseInt(originSeq[1]);
 		if (messageNeeds.hasOwnProperty(origin)) {
-			if (messageNeeds[origin] = seq) {
+			if (messageNeeds[origin] == seq) {
 				messageNeeds[origin] = seq + 1;
 			}
 		} else {
@@ -116,7 +119,6 @@ function receiveGossipMessage(gossipMessage) {
 				// prepare gossipMessage rumor and end it
 				rumor = {};
 				rumor.Rumor = messageStore[messageID];
-
 				rumor.Endpoint = myEndpoint
 				console.log('Sending response to want');
 				console.log(rumor);
