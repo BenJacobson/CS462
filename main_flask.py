@@ -21,6 +21,10 @@ providers = {
     'foursquare': FourSquare
 }
 
+gossip_route = 'https://ec2-52-25-168-24.us-west-2.compute.amazonaws.com/gossip/'
+forwarding_store = dict()
+gossip_endpoints = set()
+
 # Define database models
 
 class User(db.Model):
@@ -131,34 +135,46 @@ def chat(current_user):
 	return render_template('chat.html', current_user=current_user)
 
 
-forwarding_store = dict()
+@app.route('/gossip/endpoints')
+def get_gossip_enpoints():
+	return json.dumps(list(gossip_endpoints))
+
+
+@app.route('/gossip/clear')
+def clear_gossip():
+	forwarding_store.clear()
+	gossip_endpoints.clear()
+	return redirect('/')
+
 
 @app.route('/gossip/<uuid>', methods=['POST'])
-@validate_user
-def gossip(current_user, uuid):
+def propogate_gossip(uuid):
 	global forwarding_store
+	# record endpoints
+	to_endpoint = gossip_route + uuid
+	gossip_endpoints.add(to_endpoint)
+	data = request.get_data()
+	parsed_data = json.loads(data)
+	if 'Endpoint' in parsed_data:
+		from_endpoint = parsed_data['Endpoint']
+		gossip_endpoints.add(from_endpoint)
+	# save message to be retrieved later
 	if uuid not in forwarding_store:
 		forwarding_store[uuid] = []
-	if not current_user.is_logged_in():
-		response = make_response()
-		response.headers['Content-Type'] = 'application/json'
-		response.data = '{"error": {"message": "please login to chat"}}'
-		return response
-	data = request.get_data()
-	try:
-		parsed_data = json.loads(data)
-		if 'Rumor' in parsed_data and 'Endpoint' in parsed_data:
-			other_user = parsed_data['Endpoint']
-		else:
-			raise Exception()
-		if other_user not in forwarding_store:
-			forwarding_store[other_user] = []
-	except:
-		other_user = random.sample(forwarding_store.keys(), 1)[0]
-	if other_user != uuid:
-		forwarding_store[other_user].insert(0, data)
-	# return pending items sent to user
-	return forwarding_store[uuid].pop() if len(forwarding_store[uuid]) > 0 else ''
+	forwarding_store[uuid].insert(0, data)
+	forwarding_store[uuid] = forwarding_store[uuid][:5]
+	return '', 204
+
+
+@app.route('/retrieve/<uuid>')
+def retrieve_gossip(uuid):
+	if uuid not in forwarding_store:
+		forwarding_store[uuid] = []
+	endpoint = gossip_route + uuid
+	gossip_endpoints.add(endpoint)
+	if len(forwarding_store[uuid]) > 0:
+		return forwarding_store[uuid].pop()
+	return '', 204
 
 	
 def create_append_function():

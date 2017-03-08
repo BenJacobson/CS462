@@ -13,99 +13,127 @@ function guid() {
 
 originID = guid()
 nextMessageID = 0
+myEndpoint = 'https://' + window.location.hostname + '/gossip/' + originID
+
+otherEndpoints = []
 
 messageStore = {}
 messageNeeds = {}
 lastMessageID = originID + ':' + nextMessageID
 
-function scrollToRecentChat() {
+function getGossipEndpoints() {
+	var http = new XMLHttpRequest();
+	http.open("GET", "/gossip/endpoints", true);
+	http.onreadystatechange = function() {
+	    if (http.readyState == 4 && http.status == 200) {
+	    	var response = JSON.parse(http.responseText);
+	    	otherEndpoints = response;
+	    }
+	}
+	http.send();
+	setTimeout(getGossipEndpoints, 10000);
+}
+
+function scrollToRecentChatMessage() {
 	var chatboxes = document.getElementsByClassName("chatbox");
 	chatboxes.forEach(function(chatbox) {
 		chatbox.scrollTop = chatbox.scrollHeight;
 	});
 }
 
-function addMessage(message) {
+function addChatMessage(message) {
 	var li = document.createElement("li");
 	var messageNode = document.createTextNode(message);
 	li.appendChild(messageNode);
 	document.getElementById("messagesList").appendChild(li);
-	scrollToRecentChat();
+	scrollToRecentChatMessage();
 }
 
-function prepareRumor() {
+function randomChoice(choices) {
+	var index = Math.floor(Math.random() * choices.length);
+	return choices[index];
+}
+
+function prepareGossipMessage() {
 	if (Math.floor(Math.random()*2)) { // Rumor
 		lastMessage = messageStore[lastMessageID]
 		if (lastMessage)
-			return {Rumor: lastMessage};
-		else
-			return {};
+			return {Rumor: lastMessage, Endpoint: myEndpoint};
 	} else { // Want
 		console.log('sending want');
 		wants = [];
 		for (key in messageNeeds) {
 			wants.push(key + ':' + messageNeeds[key]);
 		}
-		return {Want: wants, Endpoint: originID};
+		return {Want: wants, Endpoint: myEndpoint};
 	}
+	return {};
 }
 
-function sendRumor(rumor) {
+function sendGossipMessage(gossipMessage, otherEndpoint) {
 	var http = new XMLHttpRequest();
-	http.open("POST", "/gossip/"+originID, true);
+	http.open("POST", otherEndpoint, true);
+	http.send(JSON.stringify(gossipMessage));
+}
+
+function propagateGossipMessage() {
+	var otherEndpoint = randomChoice(otherEndpoints);
+	if (otherEndpoint != undefined) {
+		gossipMessage = prepareGossipMessage();
+		sendGossipMessage(gossipMessage, otherEndpoint);
+	}
+	setTimeout(propagateGossipMessage, 1000);
+}
+
+function receiveGossipMessage(gossipMessage) {
+	if (gossipMessage.hasOwnProperty('Rumor')) {
+		// update message needs here
+		try {
+			var originSeq = gossipMessage.Rumor.ID.split(':');
+		} catch (err) {
+			debugger;
+		}
+		if (!messageStore.hasOwnProperty(gossipMessage.Rumor.ID)) {
+			messageStore[gossipMessage.Rumor.ID] = gossipMessage.Rumor;
+			addChatMessage(gossipMessage.Rumor.Message);
+		}
+		origin = originSeq[0];
+		seq = parseInt(originSeq[1]);
+		if (messageNeeds.hasOwnProperty(origin)) {
+			if (messageNeeds[origin] = seq) {
+				messageNeeds[origin] = seq + 1;
+			}
+		} else {
+			messageNeeds[origin] = seq;
+		}
+	}
+	if (gossipMessage.hasOwnProperty('Want')) {
+		gossipMessage.Want.forEach(function (messageID) {
+			if (messageStore.hasOwnProperty(messageID)) {
+				// prepare gossipMessage rumor and end it
+				rumor = {};
+				rumor.Rumor = messageStore[messageID];
+				rumor.Endpoint = myEndpoint
+				console.log('Sending response to want');
+				console.log(rumor);
+				sendGossipMessage(rumor, gossipMessage.Endpoint);
+			}
+		});
+	}
+	console.log(gossipMessage);
+}
+
+function retrieveGossipMessage() {
+	var http = new XMLHttpRequest();
 	http.onreadystatechange = function() {
 	    if (http.readyState == 4 && http.status == 200 && http.responseText) {
 	    	var response = JSON.parse(http.responseText);
-	    	if (response.hasOwnProperty('Rumor')) {
-	    		// update message needs here
-	    		originSeq = response.Rumor.ID.split(':');
-	    		if (!messageStore.hasOwnProperty(response.Rumor.ID)) {
-	    			messageStore[response.Rumor.ID] = response.Rumor.Message;
-	    			addMessage(response.Rumor.Message);
-	    		}
-	    		origin = originSeq[0];
-	    		seq = parseInt(originSeq[1]);
-	    		if (messageNeeds.hasOwnProperty(origin)) {
-	    			if (messageNeeds[origin] = seq) {
-	    				messageNeeds[origin] = seq + 1;
-	    			}
-	    		} else {
-	    			messageNeeds[origin] = seq;
-	    		}
-	    	}
-	    	if (response.hasOwnProperty('Want')) {
-	    		response.Want.forEach(function (messageID) {
-	    			if (messageStore.hasOwnProperty(messageID)) {
-	    				// prepare response rumor and end it
-	    				rumor = {};
-	    				rumor.Rumor = messageStore[messageID];
-	    				rumor.Endpoint = response.Endpoint
-	    				console.log('Sending response to want');
-	    				console.log(rumor);
-	    				sendRumor(rumor);
-	    			}
-	    		});
-	    	}
-	        console.log(response);
+	    	receiveGossipMessage(response);
 	    }
 	}
-	http.send(JSON.stringify(rumor));
-}
-
-function propagate() {
-	rumor = prepareRumor();
-	sendRumor(rumor);
-	setTimeout(propagate, 1000);
-}
-
-window.onload = function () {
-	document.getElementById("chatMessage")
-		.addEventListener("keyup", function(event) {
-		if (event.keyCode == 13) {
-			document.getElementById("sendMessage").click();
-		}
-	});
-	propagate();
+	http.open('GET', '/retrieve/'+originID, true);
+	http.send();
+	setTimeout(retrieveGossipMessage, 1000);
 }
 
 function sendChatMessage() {
@@ -117,5 +145,17 @@ function sendChatMessage() {
 	lastMessageID = id
 	messageStore[id] = {ID: id, Message: message}
 
-	addMessage(message)
+	addChatMessage(message)
+}
+
+window.onload = function () {
+	document.getElementById("chatMessage")
+		.addEventListener("keyup", function(event) {
+		if (event.keyCode == 13) {
+			document.getElementById("sendMessage").click();
+		}
+	});
+	getGossipEndpoints();
+	propagateGossipMessage();
+	retrieveGossipMessage();
 }
