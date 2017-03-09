@@ -33,10 +33,16 @@ function getGossipEndpoints() {
 	http.send();
 }
 
-function addNewEndpoint() {
+function addNewEndpoint(newEndpoint) {
+	if (!otherEndpoints.includes(newEndpoint)) {
+		otherEndpoints.push(newEndpoint);
+	}
+}
+
+function userAddNewEndpoint() {
 	var newEndpointElement = document.getElementById('newEndpoint');
 	var newEndpoint = newEndpointElement.value;
-	otherEndpoints.push(newEndpoint);
+	addNewEndpoint(newEndpoint);
 	newEndpointElement.value = '';
 }
 
@@ -65,14 +71,13 @@ function prepareGossipMessage() {
 	if (Math.floor(Math.random()*2)) { // Rumor
 		lastMessage = messageStore[lastMessageID]
 		if (lastMessage)
-			return {Rumor: lastMessage, Endpoint: myEndpoint};
+			return {Rumor: lastMessage, EndPoint: myEndpoint};
 	} else { // Want
-		console.log('sending want');
 		wants = [];
 		for (key in messageNeeds) {
 			wants.push(key + ':' + messageNeeds[key]);
 		}
-		return {Want: wants, Endpoint: myEndpoint};
+		return {Want: wants, EndPoint: myEndpoint};
 	}
 	return {};
 }
@@ -93,15 +98,13 @@ function propagateGossipMessage() {
 }
 
 function receiveGossipMessage(gossipMessage) {
-	if (gossipMessage.hasOwnProperty('Endpoint')) {
-		otherEndpoints.push(gossipMessage.Endpoint);
-	}
+	addNewEndpoint(gossipMessage.EndPoint);
 	if (gossipMessage.hasOwnProperty('Rumor')) {
 		// update message needs here
-		var originSeq = gossipMessage.Rumor.ID.split(':');
-		if (!messageStore.hasOwnProperty(gossipMessage.Rumor.ID)) {
-			messageStore[gossipMessage.Rumor.ID] = gossipMessage.Rumor;
-			addChatMessage(gossipMessage.Rumor.Originator, gossipMessage.Rumor.Message);
+		var originSeq = gossipMessage.Rumor.MessageID.split(':');
+		if (!messageStore.hasOwnProperty(gossipMessage.Rumor.MessageID)) {
+			messageStore[gossipMessage.Rumor.MessageID] = gossipMessage.Rumor;
+			addChatMessage(gossipMessage.Rumor.Originator, gossipMessage.Rumor.Text);
 		}
 		origin = originSeq[0];
 		seq = parseInt(originSeq[1]);
@@ -119,14 +122,11 @@ function receiveGossipMessage(gossipMessage) {
 				// prepare gossipMessage rumor and end it
 				rumor = {};
 				rumor.Rumor = messageStore[messageID];
-				rumor.Endpoint = myEndpoint
-				console.log('Sending response to want');
-				console.log(rumor);
-				sendGossipMessage(rumor, gossipMessage.Endpoint);
+				rumor.EndPoint = myEndpoint
+				sendGossipMessage(rumor, gossipMessage.EndPoint);
 			}
 		});
 	}
-	console.log(gossipMessage);
 }
 
 function retrieveGossipMessage() {
@@ -149,7 +149,7 @@ function sendChatMessage() {
 
 	id = originID + ':' + nextMessageID++
 	lastMessageID = id
-	messageStore[id] = {ID: id, Originator: myName, Message: message}
+	messageStore[id] = {MessageID: id, Originator: myName, Text: message}
 
 	addChatMessage(myName, message)
 }

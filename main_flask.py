@@ -155,14 +155,15 @@ def propogate_gossip(uuid):
 	gossip_endpoints.add(to_endpoint)
 	data = request.get_data()
 	parsed_data = json.loads(data)
-	if 'Endpoint' in parsed_data:
-		from_endpoint = parsed_data['Endpoint']
+	if 'EndPoint' in parsed_data:
+		from_endpoint = parsed_data['EndPoint']
 		gossip_endpoints.add(from_endpoint)
 	# save message to be retrieved later
 	if uuid not in forwarding_store:
 		forwarding_store[uuid] = []
 	forwarding_store[uuid].insert(0, data)
 	forwarding_store[uuid] = forwarding_store[uuid][:5]
+	print('saving', uuid, data)
 	return '', 204
 
 
